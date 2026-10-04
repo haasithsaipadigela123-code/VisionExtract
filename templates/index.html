@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vision Extract — In-Browser Forensic Data Extraction</title>
+  <meta name="description" content="A typographical & forensic optical character extraction apparatus for video and visual media. Every computation executes inside client memory." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.jpg') }}" />
+</head>
+<body>
+
+  <!-- ── Fullscreen Drag Overlay ────────────────────────── -->
+  <div id="dragOverlay" class="drag-overlay" hidden>
+    <div class="drag-overlay-box">
+      <div class="drag-overlay-icon" aria-hidden="true">↓</div>
+      <h2>DROP TARGET MEDIA</h2>
+      <p>Extract data from your video or image directly in your browser</p>
+    </div>
+  </div>
+
+  <!-- ── Top Header Bar ── -->
+  <aside class="proto-bar">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span class="brand-logo-frame" title="Vision Extract Monogram">
+        <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Vision Extract" width="24" height="24" style="display:block; object-fit:contain; background:#fff;" />
+      </span>
+      <span class="proto-badge">VISION EXTRACT</span>
+    </div>
+    <div class="proto-controls">
+      <button class="proto-btn" id="soundToggle" type="button" title="Toggle audio chime">Sound: ON</button>
+    </div>
+  </aside>
+
+  <div class="wrapper">
+
+    <!-- ── Session Restore Banner (if previous session exists) ─ -->
+    <div class="session-restore-banner" id="sessionBanner" hidden>
+      <div class="srb-info">
+        <span class="srb-tag">PREVIOUS SESSION</span>
+        <span id="sessionSummary">file.mp4 · 12 items restored</span>
+      </div>
+      <div class="srb-actions">
+        <button class="btn-action-outline btn-xs" id="restoreSessionBtn" type="button">Restore Session</button>
+        <button class="btn-action-outline btn-xs" id="dismissSessionBtn" type="button">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- ── Masthead ───────────────────────────────────── -->
+    <header class="masthead anim-up" id="hero" style="animation-delay:0.05s">
+      <div class="title-block">
+        <h1>Vision<br/>Extract</h1>
+        <p>Upload any video or image to automatically scan and extract phone numbers, email addresses, UPI IDs, GSTIN, PAN, IFSC codes, and more directly in your browser with complete privacy.</p>
+        <ul class="feature-pills" id="featurePills">
+          {% for key in order %}
+            <li class="pill cat-{{ key }}"><span class="pdot"></span>{{ categories[key] }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="masthead-meta">
+        <div><span class="status-dot"></span>SYSTEM STATUS: <strong>ACTIVE</strong></div>
+        <div>OCR ENGINE: <strong>TESSERACT.JS 5.1</strong></div>
+        <div>CLIENT REPOSITORY: <strong>LOCAL BUFFER</strong></div>
+        <div>FRAMES SCANNED: <strong id="mastheadFrames">—</strong></div>
+        <div>ENTITIES FOUND: <strong id="mastheadEntities">—</strong></div>
+      </div>
+    </header>
+
+    <!-- ── Info strip (shown during/after processing) ──── -->
+    <div class="info-strip" id="infoStrip" hidden>
+      <span class="is-name" id="isName"></span>
+      <span class="sep">·</span><span id="isSize"></span>
+      <span class="sep" id="isFpsSep">·</span><span id="isFps"></span>
+      <button class="btn-action-outline btn-xs" id="newBtn" type="button" style="margin-left:auto;">Mount New File</button>
+    </div>
+
+    <!-- ── Two-column broadside grid ───────────────────── -->
+    <div class="broadside-grid">
+
+      <!-- LEFT COLUMN: 01 // Ingestion & Sampling -->
+      <section class="col-left anim-up" style="animation-delay:0.15s">
+        <div class="sec-header">
+          <span class="sec-num">01 //</span>
+          <h2 class="sec-title">Ingestion &amp; Sampling</h2>
+        </div>
+
+        <!-- Upload drop box -->
+        <div class="drop-box" id="dropzone" tabindex="0" role="button" aria-label="Mount Target Media">
+          <div class="drop-icon-symbol">↓</div>
+          <h3 class="drop-heading" id="dzTitle">Mount Target Media</h3>
+          <p class="drop-sub" id="dzSub">Drop MP4, WebM, MOV or Image here<br/>Max payload limit: 500 MB</p>
+
+          <div class="file-mounted-badge" id="fileMountedBadge" hidden>
+            <span class="fmb-name" id="fileName">file.mp4</span>
+            <span class="fmb-size" id="fileSize">0 MB</span>
+            <button class="fmb-remove" id="removeFile" type="button" title="Remove mounted file">✕</button>
+          </div>
+
+          <div class="drop-shortcuts" aria-hidden="true">
+            <span class="kbd-tag"><kbd>Ctrl</kbd>+<kbd>O</kbd> Mount</span>
+            <span class="kbd-tag"><kbd>Ctrl</kbd>+<kbd>↵</kbd> Run</span>
+            <span class="kbd-tag"><kbd>Esc</kbd> Cancel</span>
+          </div>
+          <input type="file" id="fileInput" accept="image/*,video/*" hidden />
+        </div>
+
+        <!-- Parameter Box: ALWAYS VISIBLE Sampling Interval & Execute Button -->
+        <div class="param-box" id="paramBox">
+          <div class="param-label">
+            <span>Sampling Interval</span>
+            <span class="val" id="fpsDisplay">2 FPS (Nominal)</span>
+          </div>
+          <div class="rate-selector" id="fpsGrid">
+            <button type="button" class="rate-btn" data-fps="1"><b>1</b>FPS</button>
+            <button type="button" class="rate-btn active" data-fps="2"><b>2</b>FPS</button>
+            <button type="button" class="rate-btn" data-fps="3"><b>3</b>FPS</button>
+            <button type="button" class="rate-btn" data-fps="5"><b>5</b>FPS</button>
+          </div>
+
+          <button class="btn-swiss-primary" id="startBtn" type="button">
+            <span id="startBtnText">Execute Extraction</span>
+            <span class="arrow">→</span>
+          </button>
+
+          <!-- Progress track during execution -->
+          <div class="progress-track" id="progTrack" hidden>
+            <div class="progress-fill" id="progBar" style="width: 0%;"></div>
+          </div>
+          <div class="progress-status" id="progStatus" hidden>
+            <span id="progLabel">Extracting frames…</span>
+            <span id="progPct">0%</span>
+          </div>
+
+          <!-- Active extraction telemetry during execution -->
+          <div class="proc-telemetry" id="procStats" hidden>
+            <div class="tele-grid">
+              <div class="tele-item"><span class="tl">Frame:</span><b id="statFrame">#0</b></div>
+              <div class="tele-item"><span class="tl">Progress:</span><b id="statProgress">0 / 0</b></div>
+              <div class="tele-item"><span class="tl">Elapsed:</span><b id="statElapsed">—</b></div>
+              <div class="tele-item"><span class="tl" id="statEtaLabel">Est. left:</span><b id="statEta">—</b></div>
+            </div>
+            <button class="btn-cancel-swiss" id="cancelBtn" type="button">Cancel Extraction</button>
+          </div>
+
+          <p class="error-line" id="errorLine" hidden></p>
+        </div>
+
+        <!-- Scanned Frame Filmstrip Reel -->
+        <section class="filmstrip-box" id="filmstripBox" hidden>
+          <div class="filmstrip-header">
+            <span class="fs-title">FRAME BUFFER REEL</span>
+            <span class="fs-count" id="filmstripCount">0 FRAMES</span>
+          </div>
+          <div class="filmstrip-track" id="filmstripTrack"></div>
+        </section>
+
+        <!-- Compact explanation -->
+        <section class="steps-compact" id="steps">
+          <div class="step-item"><span class="step-n">1</span><div><b>Upload</b><p>Drop any video (up to 500 MB) or an image. 100% on-device.</p></div></div>
+          <div class="step-item"><span class="step-n">2</span><div><b>OCR</b><p>Frames are sampled and read in client memory by Tesseract.js.</p></div></div>
+          <div class="step-item"><span class="step-n">3</span><div><b>Export</b><p>Structured ledger with one-click clipboard, CSV, and JSON.</p></div></div>
+        </section>
+      </section>
+
+      <!-- RIGHT COLUMN: 02 // Extraction Ledger -->
+      <section class="col-right anim-up" style="animation-delay:0.3s">
+        <div class="sec-header">
+          <span class="sec-num">02 //</span>
+          <h2 class="sec-title">Extraction Ledger</h2>
+        </div>
+
+        <!-- Skeleton Loader (shown during processing) -->
+        <div class="ledger-skeleton" id="ledgerSkeleton" hidden>
+          <div class="sk-head">
+            <div class="sk-line sk-title-bar"></div>
+            <div class="sk-line sk-sub-bar"></div>
+          </div>
+          <div class="sk-matrix">
+            <div class="sk-card"></div>
+            <div class="sk-card"></div>
+            <div class="sk-card"></div>
+            <div class="sk-card"></div>
+            <div class="sk-card"></div>
+            <div class="sk-card"></div>
+          </div>
+          <div class="sk-table">
+            <div class="sk-row sk-row-head"></div>
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+            <div class="sk-row"></div>
+          </div>
+        </div>
+
+        <!-- Summary Matrix Grid (Concept 2 Broadside style) -->
+        <div class="matrix-grid" id="summaryCards">
+          <button type="button" class="matrix-item active" data-cat="all">
+            <span class="m-label">ALL FIELDS</span>
+            <div class="m-count" id="sc-cnt-all">00</div>
+          </button>
+          <button type="button" class="matrix-item" data-cat="email">
+            <span class="m-label">EMAILS</span>
+            <div class="m-count" id="sc-cnt-email">00</div>
+          </button>
+          <button type="button" class="matrix-item" data-cat="phone">
+            <span class="m-label">TELEPHONE</span>
+            <div class="m-count" id="sc-cnt-phone">00</div>
+          </button>
+          <button type="button" class="matrix-item" data-cat="upi">
+            <span class="m-label">UPI ID</span>
+            <div class="m-count" id="sc-cnt-upi">00</div>
+          </button>
+          <button type="button" class="matrix-item" data-cat="gst">
+            <span class="m-label">GSTIN</span>
+            <div class="m-count" id="sc-cnt-gst">00</div>
+          </button>
+          <button type="button" class="matrix-item" data-cat="pan">
+            <span class="m-label">PAN</span>
+            <div class="m-count" id="sc-cnt-pan">00</div>
+          </button>
+        </div>
+
+        <div id="tableSection">
+          <div class="ledger-controls">
+            <input type="search" class="ledger-search" id="search" placeholder="Filter ledger records…" />
+            <div class="ledger-actions" style="display:flex; gap:8px; align-items:center;">
+              <label class="conf-filter" style="display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:11px; color:var(--ink-muted);">
+                <span>Conf ≥</span>
+                <select id="minConf" class="select-swiss">
+                  <option value="0">0%</option>
+                  <option value="50">50%</option>
+                  <option value="70">70%</option>
+                  <option value="85">85%</option>
+                </select>
+              </label>
+              <button class="btn-action-outline" id="tableCopyAll" type="button"><span>Copy All</span></button>
+              <button class="btn-action-outline" id="exportCsvBtn" type="button"><span>Export .CSV</span></button>
+              <button class="btn-action-outline" id="exportJsonBtn" type="button"><span>Export .JSON</span></button>
+            </div>
+          </div>
+
+          <div class="ledger-table-wrap">
+            <table class="ledger-table" id="dataTable">
+              <thead>
+                <tr>
+                  <th data-sort="category" style="cursor:pointer;">TYPE <span class="arrow"></span></th>
+                  <th data-sort="value" style="cursor:pointer;">IDENTIFIER VALUE <span class="arrow"></span></th>
+                  <th class="num" data-sort="timestamp" style="cursor:pointer;">TIMESTAMP <span class="arrow"></span></th>
+                  <th class="num" data-sort="frame" style="cursor:pointer;">FRAME <span class="arrow"></span></th>
+                  <th class="num" data-sort="confidence" style="cursor:pointer;">CONFIDENCE <span class="arrow"></span></th>
+                  <th style="text-align: right;">CLIPBOARD</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr id="emptyRow">
+                  <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--ink-muted); font-family: var(--font-mono); font-size: 12px;">
+                    No media analyzed yet. Drop a video or image on the left and click Execute Extraction.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="empty-line" id="emptyLine" hidden style="font-family:var(--font-mono); font-size:12px; color:var(--ink-muted); padding:16px 0;">No results match this filter query.</p>
+        </div>
+
+        <!-- Export view (if tab is switched to export or per-cat) -->
+        <div id="exportView" hidden></div>
+
+        <!-- Error box -->
+        <div class="error-box" id="errorBox" hidden>
+          <span class="err-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5m0 3h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+          </span>
+          <h3>Processing Error</h3>
+          <p id="errorText"></p>
+          <button class="btn-action-outline" id="tryAgainBtn" type="button" style="margin-top:12px;"><span>Try Again</span></button>
+        </div>
+      </section>
+
+    </div><!-- /broadside-grid -->
+
+  </div><!-- /wrapper -->
+
+  <!-- Toast Notification Box -->
+  <div class="toast-box" id="toastBox" role="status" aria-live="polite"></div>
+
+  <footer class="footer">
+    <div class="footer-brand">Vision Extract</div>
+    <p class="footer-desc">A fast, private tool to scan your videos and images, extracting phone numbers, email addresses, payment IDs, and identity codes directly in your browser.</p>
+  </footer>
+
+  <!-- Tesseract.js — OCR engine runs in the browser -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
