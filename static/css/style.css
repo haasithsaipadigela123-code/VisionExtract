@@ -496,7 +496,7 @@
     .btn-action-outline:hover { color: var(--bg); border-color: var(--ink); }
     .btn-action-outline span { position: relative; z-index: 1; }
 
-    .ledger-table-wrap { overflow-x: auto; }
+    .ledger-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
     .ledger-table th {
       border-bottom: 1px solid var(--rule-heavy);
@@ -1178,3 +1178,498 @@ kbd { font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600; borde
 }
 
 
+
+
+/* =========================================================================
+   RESPONSIVE DESIGN SYSTEM — MOBILE, TABLET & LAPTOP OPTIMIZATIONS
+   ========================================================================= */
+
+/* --- Mobile Touch & Accessibility Foundation --- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+button, input, select {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure images and tables never overflow their containers */
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Safe area insets for modern mobile notched displays */
+.proto-bar {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.wrapper {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+/* --- Ledger Actions default flex container --- */
+.ledger-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* --- Error Box & Error Line Component Styling --- */
+.error-box {
+  background: #FFF7F5;
+  border: 1px solid var(--conf-low);
+  border-left: 4px solid var(--conf-low);
+  padding: 20px;
+  margin-top: 24px;
+}
+.error-box .err-ico {
+  color: var(--conf-low);
+  display: inline-block;
+  margin-bottom: 6px;
+}
+.error-box h3 {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--conf-low);
+  margin-bottom: 6px;
+}
+.error-box p {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.error-line {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--conf-low);
+  margin-top: 10px;
+  word-break: break-word;
+}
+
+/* --- Smooth Touch Scrollbar for Ledger & Filmstrip --- */
+.ledger-table-wrap,
+.filmstrip-track {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-heavy) var(--surface-subtle);
+}
+
+.ledger-table-wrap::-webkit-scrollbar,
+.filmstrip-track::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ledger-table-wrap::-webkit-scrollbar-track,
+.filmstrip-track::-webkit-scrollbar-track {
+  background: var(--surface-subtle);
+}
+
+.ledger-table-wrap::-webkit-scrollbar-thumb,
+.filmstrip-track::-webkit-scrollbar-thumb {
+  background: var(--rule-heavy);
+}
+
+/* =========================================================================
+   MEDIA QUERIES: Laptop, Tablet & Mobile Breakpoints
+   ========================================================================= */
+
+/* ── Laptop / Compact Desktop (max-width: 1080px) ────────────────────────── */
+@media (max-width: 1080px) {
+  .wrapper {
+    max-width: 100%;
+    padding: 36px 24px;
+  }
+  .broadside-grid {
+    gap: 36px;
+    grid-template-columns: 340px 1fr;
+  }
+  .masthead {
+    gap: 28px;
+  }
+  .proto-bar {
+    padding: 12px 24px;
+  }
+}
+
+/* ── Tablet & Small Screens (max-width: 900px) ──────────────────────────── */
+@media (max-width: 900px) {
+  .broadside-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .masthead {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+  }
+  .masthead-meta {
+    text-align: left;
+    border-left: none;
+    border-top: 1px solid var(--rule);
+    padding-left: 0;
+    padding-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+  }
+  .drop-box {
+    padding: 36px 20px;
+  }
+  .ledger-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .ledger-search {
+    max-width: 100%;
+    width: 100%;
+  }
+  .ledger-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* ── Mobile Landscape & Phablets (max-width: 768px) ─────────────────────── */
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 24px 16px;
+  }
+  .proto-bar {
+    padding: 10px 16px;
+  }
+  .title-block h1 {
+    font-size: clamp(34px, 8.5vw, 56px);
+  }
+  .title-block p {
+    font-size: 15px;
+    margin-top: 14px;
+  }
+  /* Hide desktop keyboard shortcuts on touch devices */
+  .drop-shortcuts {
+    display: none !important;
+  }
+  .drop-box {
+    padding: 30px 18px;
+  }
+  .matrix-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+  .matrix-item {
+    padding: 12px 14px;
+  }
+  .matrix-item .m-count {
+    font-size: 22px;
+  }
+  .ledger-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .ledger-actions .btn-action-outline {
+    flex: 1 1 auto;
+    text-align: center;
+    justify-content: center;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .ledger-actions .conf-filter {
+    flex: 1 1 100%;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .filmstrip-box {
+    padding: 10px;
+  }
+  .fs-frame {
+    flex: 0 0 64px;
+    height: 42px;
+  }
+  .step-item {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .toast-box {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+  }
+  .toast-msg {
+    font-size: 11px;
+    padding: 10px 14px;
+  }
+  .footer {
+    padding: 36px 16px 44px;
+    margin-top: 48px;
+  }
+}
+
+/* ── Mobile Portrait (max-width: 520px) ─────────────────────────────────── */
+@media (max-width: 520px) {
+  .proto-bar {
+    padding: 8px 12px;
+  }
+  .proto-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    letter-spacing: 0.04em;
+  }
+  .brand-logo-frame {
+    width: 24px;
+    height: 24px;
+  }
+  .proto-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  .wrapper {
+    padding: 16px 12px 28px;
+  }
+  .masthead {
+    gap: 16px;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+  }
+  .title-block h1 {
+    font-size: clamp(28px, 9vw, 40px);
+    line-height: 0.95;
+  }
+  .title-block h1::after {
+    width: 72px;
+    height: 3px;
+    margin-top: 8px;
+    animation: none;
+  }
+  .title-block p {
+    font-size: 13.5px;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+  .feature-pills {
+    margin-top: 14px;
+    gap: 4px;
+  }
+  .pill {
+    font-size: 0.62rem;
+    padding: 3px 8px;
+  }
+  .masthead-meta {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    font-size: 11px;
+    padding-top: 14px;
+  }
+  .sec-header {
+    margin-bottom: 18px;
+    padding-bottom: 6px;
+  }
+  .sec-title {
+    font-size: 14px;
+  }
+  .drop-box {
+    padding: 24px 14px;
+  }
+  .drop-icon-symbol {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  .drop-heading {
+    font-size: 16px;
+  }
+  .drop-sub {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .file-mounted-badge {
+    padding: 6px 10px;
+    font-size: 10.5px;
+    gap: 6px;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+  }
+  .file-mounted-badge .fmb-name {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .param-box {
+    padding: 16px 12px;
+    margin-top: 18px;
+  }
+  .param-label {
+    font-size: 10.5px;
+    margin-bottom: 10px;
+  }
+  .rate-btn {
+    padding: 10px 2px;
+    font-size: 10px;
+  }
+  .rate-btn b {
+    font-size: 13px;
+  }
+  .btn-swiss-primary {
+    padding: 13px 16px;
+    font-size: 12px;
+    min-height: 44px;
+  }
+  .tele-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 10.5px;
+  }
+  .matrix-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .matrix-item {
+    padding: 10px 12px;
+  }
+  .matrix-item .m-label {
+    font-size: 9px;
+  }
+  .matrix-item .m-count {
+    font-size: 19px;
+  }
+  .ledger-controls {
+    gap: 10px;
+  }
+  .ledger-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .ledger-actions .conf-filter {
+    grid-column: span 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    width: 100%;
+  }
+  .ledger-actions .btn-action-outline {
+    width: 100%;
+    text-align: center;
+    padding: 10px 6px;
+    font-size: 10.5px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #tableCopyAll {
+    grid-column: span 2;
+  }
+  .ledger-table th {
+    padding: 9px 8px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .ledger-table td {
+    padding: 10px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .badge-pill {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+  .btn-copy-minimal {
+    font-size: 10px;
+    padding: 4px 8px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .session-restore-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 11px;
+    padding: 10px 12px;
+  }
+  .srb-actions {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+  }
+  .srb-actions button {
+    flex: 1;
+    text-align: center;
+  }
+  .info-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    font-size: 11px;
+    padding: 10px 12px;
+  }
+  .info-strip .btn-action-outline {
+    margin-left: 0 !important;
+    width: 100%;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .drag-overlay-box {
+    padding: 28px 16px;
+    margin: 0 12px;
+  }
+  .drag-overlay-box h2 {
+    font-size: 1.25rem;
+  }
+  .drag-overlay-icon {
+    width: 54px;
+    height: 54px;
+    font-size: 24px;
+  }
+  .footer {
+    padding: 28px 12px 36px;
+    margin-top: 36px;
+  }
+  .footer-desc {
+    font-size: 11.5px;
+  }
+}
+
+/* ── Very Small Mobile (max-width: 360px) ────────────────────────────────── */
+@media (max-width: 360px) {
+  .rate-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rate-btn {
+    border-bottom: 1px solid var(--rule);
+  }
+  .rate-btn:nth-child(2) {
+    border-right: none;
+  }
+  .rate-btn:nth-child(3),
+  .rate-btn:nth-child(4) {
+    border-bottom: none;
+  }
+  .ledger-actions {
+    grid-template-columns: 1fr;
+  }
+  .ledger-actions .btn-action-outline {
+    grid-column: span 1;
+  }
+  #tableCopyAll {
+    grid-column: span 1;
+  }
+}
