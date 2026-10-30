@@ -86,7 +86,7 @@
     }
 
     /* ── Layout ────────────────────────────────────────────────────────── */
-    .wrapper { max-width: 1280px; margin: 0 auto; padding: 48px 36px; }
+    .wrapper { width: 100%; max-width: 1280px; margin: 0 auto; padding: 48px 36px; box-sizing: border-box; }
     .masthead {
       border-bottom: 2px solid var(--rule-heavy);
       padding-bottom: 36px;
@@ -109,7 +109,7 @@
     .issue-stamp .hl { color: var(--accent); font-weight: 500; }
     .title-block h1 {
       font-family: var(--font-heading);
-      font-size: clamp(42px, 5.5vw, 72px);
+      font-size: clamp(28px, 6vw, 72px);
       font-weight: 800;
       letter-spacing: -0.045em;
       line-height: 0.92;
@@ -159,8 +159,14 @@
     /* ── Grid System ───────────────────────────────────────────────────── */
     .broadside-grid {
       display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 52px;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: clamp(24px, 4vw, 52px);
+      width: 100%;
+      min-width: 0;
+    }
+    .col-left, .col-right {
+      min-width: 0;
+      max-width: 100%;
     }
     @media (max-width: 980px) {
       .broadside-grid { grid-template-columns: 1fr; }
@@ -502,7 +508,7 @@
     .btn-action-outline:hover { color: var(--bg); border-color: var(--ink); }
     .btn-action-outline span { position: relative; z-index: 1; }
 
-    .ledger-table-wrap { overflow-x: auto; }
+    .ledger-table-wrap { overflow-x: auto; max-width: 100%; width: 100%; min-width: 0; -webkit-overflow-scrolling: touch; }
     .ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
     .ledger-table th {
       border-bottom: 1px solid var(--rule-heavy);
@@ -1187,9 +1193,9 @@ kbd { font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600; borde
 
 
 /* =========================================================================
-   RESPONSIVE DESIGN SYSTEM -- VISIONEXTRACT MOBILE & DESKTOP SUITE
+   COMPREHENSIVE RESPONSIVE DESIGN SUITE
+   Breakpoints: 320px, 360px, 375px, 390px, 414px, 430px, 768px, 1024px, 1280px+
    Strictly UI/UX responsiveness preserving Swiss Architectural Broadside identity
-   Breakpoints supported: 320px, 360px, 375px, 390px, 414px, 430px, 768px, 1024px, 1280px+
    ========================================================================= */
 
 /* --- Mobile Foundations & Safe Area Insets --- */
@@ -1200,23 +1206,24 @@ html {
 
 body {
   overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
-/* Fluid responsive wrapper */
+/* Fluid responsive wrapper with safe area support */
 .wrapper {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.proto-bar {
   width: 100%;
   box-sizing: border-box;
   padding-left: max(16px, env(safe-area-inset-left));
   padding-right: max(16px, env(safe-area-inset-right));
 }
 
-.proto-bar {
-  padding-left: max(16px, env(safe-area-inset-left));
-  padding-right: max(16px, env(safe-area-inset-right));
-  box-sizing: border-box;
-}
-
-/* Touch-action and accessible tap feedback on buttons */
+/* Accessible touch targets and active tactile feedback */
 button,
 .proto-btn,
 .rate-btn,
@@ -1242,27 +1249,30 @@ button:active,
   transform: translateY(1px);
 }
 
-/* Ensure images, video canvases never cause horizontal overflow */
+/* Prevent iOS Safari auto-zoom on inputs */
+@media (max-width: 768px) {
+  input[type="search"],
+  input[type="text"],
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Ensure images, video, canvases never cause horizontal page overflow */
 img, video, canvas {
   max-width: 100%;
   height: auto;
 }
 
-/* Default ledger-actions container */
-.ledger-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-/* Component styles for errorBox / errorLine */
+/* Error Box & Line Components */
 .error-box {
   background: var(--surface);
   border: 1px solid var(--conf-low);
   border-left: 4px solid var(--conf-low);
   padding: 16px 20px;
   margin-top: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .error-box h3 {
   font-family: var(--font-heading);
@@ -1286,44 +1296,68 @@ img, video, canvas {
   word-break: break-word;
 }
 
-/* Smooth Touch Scrolling on Frame Reel & Table */
-.ledger-table-wrap,
+/* Frame Reel Touch Scrolling */
+.filmstrip-box {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
 .filmstrip-track {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+  scroll-behavior: smooth;
+  padding-bottom: 6px;
+}
+.fs-frame {
+  flex: 0 0 76px;
+  min-width: 76px;
+  height: 50px;
+  box-sizing: border-box;
+}
+.fs-frame.has-hit {
+  border: 2px solid var(--conf-high);
+  box-shadow: 0 0 8px rgba(13, 148, 72, 0.4);
 }
 
-/* Laptop / Intermediate Viewport (max-width: 1080px) */
-@media (max-width: 1080px) {
+/* ── 1. Adapted Tablet Layout (769px–1024px) ─────────────────────────────── */
+@media (max-width: 1024px) {
   .wrapper {
     padding: 36px 24px;
   }
   .broadside-grid {
-    grid-template-columns: 340px 1fr;
-    gap: 36px;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 32px;
   }
   .masthead {
-    gap: 28px;
+    gap: 24px;
   }
   .proto-bar {
     padding: 12px 24px;
   }
 }
 
-/* Tablet & Small Screens (max-width: 980px) */
+/* ── 2. Tablet-Oriented Layout (601px–768px) ─────────────────────────────── */
 @media (max-width: 980px) {
   .broadside-grid {
-    grid-template-columns: 1fr;
-    gap: 36px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
   }
   .col-left, .col-right {
     width: 100%;
   }
   .masthead {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    padding-bottom: 28px;
-    margin-bottom: 36px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding-bottom: 24px;
+    margin-bottom: 32px;
   }
   .masthead-meta {
     text-align: left;
@@ -1332,15 +1366,14 @@ img, video, canvas {
     padding-left: 0;
     padding-top: 16px;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 8px;
   }
   .wrapper {
-    padding: 28px 20px;
+    padding: 24px 18px;
   }
 }
 
-/* Phablet & Mobile Landscape (max-width: 768px) */
 @media (max-width: 768px) {
   /* Top Bar */
   .proto-bar {
@@ -1350,18 +1383,21 @@ img, video, canvas {
     min-height: 42px;
     padding: 8px 14px;
     font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  /* Hero */
+  /* Hero Section */
   .title-block h1 {
-    font-size: clamp(32px, 8vw, 54px);
+    font-size: clamp(30px, 7.5vw, 48px);
   }
   .title-block p {
     font-size: 14.5px;
-    margin-top: 12px;
+    margin-top: 10px;
   }
   .feature-pills {
-    margin-top: 14px;
+    margin-top: 12px;
     gap: 5px;
   }
   .pill {
@@ -1369,28 +1405,38 @@ img, video, canvas {
     font-size: 0.65rem;
   }
 
-  /* Upload & Sampling */
+  /* Upload & Ingestion Interface */
   .drop-box {
-    padding: 30px 18px;
+    padding: 28px 16px;
     width: 100%;
+    box-sizing: border-box;
   }
   .drop-shortcuts {
     display: none !important;
   }
   .rate-selector {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     width: 100%;
+    box-sizing: border-box;
   }
   .rate-btn {
     min-height: 46px;
     padding: 8px 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
   .btn-swiss-primary {
     min-height: 48px;
     padding: 14px 18px;
-    font-size: 12.5px;
+    font-size: 13px;
     width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
   }
   .btn-cancel-swiss {
     min-height: 44px;
@@ -1398,18 +1444,21 @@ img, video, canvas {
 
   /* Summary Matrix Cards */
   .matrix-grid, .summary-cards {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1px;
+    width: 100%;
+    box-sizing: border-box;
   }
   .matrix-item {
     min-height: 64px;
     padding: 12px 14px;
+    box-sizing: border-box;
   }
   .matrix-item .m-count {
     font-size: 22px;
   }
 
-  /* Toolbar Controls */
+  /* Toolbar Controls & Action Buttons */
   .ledger-controls {
     flex-direction: column;
     align-items: stretch;
@@ -1419,12 +1468,14 @@ img, video, canvas {
     max-width: 100%;
     width: 100%;
     min-height: 42px;
+    box-sizing: border-box;
   }
   .ledger-actions {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     width: 100%;
+    box-sizing: border-box;
   }
   .conf-filter {
     grid-column: span 3;
@@ -1435,6 +1486,7 @@ img, video, canvas {
   }
   .conf-filter select {
     min-height: 38px;
+    padding: 6px 10px;
   }
   .ledger-actions .btn-action-outline {
     width: 100%;
@@ -1446,12 +1498,24 @@ img, video, canvas {
     justify-content: center;
     text-align: center;
     white-space: nowrap;
+    box-sizing: border-box;
   }
 
-  /* Filmstrip */
-  .fs-frame {
-    flex: 0 0 68px;
-    height: 44px;
+  /* Compact Steps */
+  .steps-compact {
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .step-item {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .step-item b {
+    font-size: 0.8rem;
+  }
+  .step-item p {
+    font-size: 0.65rem;
   }
 
   /* Toast & Dialogs */
@@ -1467,12 +1531,15 @@ img, video, canvas {
 
   /* Footer */
   .footer {
-    padding: 36px 16px 44px;
+    padding: 32px 16px 40px;
     margin-top: 48px;
+  }
+  .footer-desc {
+    font-size: 12px;
   }
 }
 
-/* Mobile Screen: Transform Table to Responsive Cards (max-width: 680px) */
+/* ── 3. Mobile Card View: Transform Table to Responsive Cards (max-width: 680px) ─ */
 @media (max-width: 680px) {
   .ledger-table-wrap {
     background: transparent;
@@ -1489,18 +1556,19 @@ img, video, canvas {
     box-sizing: border-box;
   }
 
-  /* Hide table header on mobile card view */
+  /* Hide desktop table header on mobile */
   .ledger-table thead {
     display: none;
   }
 
-  /* Card container for each record */
+  /* Responsive card container for each extracted record */
   .ledger-table tr {
     background: var(--surface);
     border: 1px solid var(--rule);
     border-left: 3px solid var(--accent);
     margin-bottom: 12px;
     padding: 14px 16px;
+    box-sizing: border-box;
   }
 
   .ledger-table tr:hover td {
@@ -1605,6 +1673,7 @@ img, video, canvas {
     justify-content: center;
     text-align: center;
     font-size: 11.5px;
+    box-sizing: border-box;
   }
 
   /* Empty row display on card view */
@@ -1612,7 +1681,7 @@ img, video, canvas {
     display: block;
     background: var(--surface);
     border: 1px dashed var(--rule);
-    padding: 32px 16px;
+    padding: 28px 14px;
     border-left: 1px dashed var(--rule);
   }
   .ledger-table #emptyRow td {
@@ -1624,7 +1693,7 @@ img, video, canvas {
   }
 }
 
-/* Mobile Devices (max-width: 480px, including 360px-430px) */
+/* ── 4. Mobile Devices (376px–430px) ─────────────────────────────────────── */
 @media (max-width: 480px) {
   .wrapper {
     padding: 16px 12px 32px;
@@ -1639,15 +1708,16 @@ img, video, canvas {
 
   /* Masthead */
   .title-block h1 {
-    font-size: clamp(28px, 9vw, 38px);
+    font-size: clamp(26px, 8.5vw, 36px);
   }
   .title-block h1::after {
-    width: 48px;
+    width: 44px;
     height: 3px;
+    margin-top: 6px;
   }
   .title-block p {
-    font-size: 13.5px;
-    margin-top: 10px;
+    font-size: 13px;
+    margin-top: 8px;
     line-height: 1.5;
   }
   .masthead-meta {
@@ -1657,21 +1727,22 @@ img, video, canvas {
     padding-top: 12px;
   }
 
-  /* Upload dropzone */
+  /* Upload Drop Box */
   .drop-box {
-    padding: 24px 14px;
+    padding: 22px 12px;
   }
   .drop-icon-symbol {
     width: 44px;
     height: 44px;
     font-size: 18px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
   .drop-heading {
-    font-size: 16px;
+    font-size: 15.5px;
   }
   .drop-sub {
     font-size: 11px;
+    line-height: 1.4;
   }
   .file-mounted-badge {
     padding: 6px 10px;
@@ -1683,18 +1754,18 @@ img, video, canvas {
     justify-content: space-between;
   }
   .file-mounted-badge .fmb-name {
-    max-width: 160px;
+    max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Parameter box */
+  /* Parameter Box */
   .param-box {
-    padding: 16px 12px;
+    padding: 14px 12px;
   }
   .rate-selector {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .rate-btn {
     min-height: 46px;
@@ -1702,7 +1773,7 @@ img, video, canvas {
     font-size: 10px;
   }
   .rate-btn b {
-    font-size: 13.5px;
+    font-size: 13px;
   }
   .btn-swiss-primary {
     min-height: 48px;
@@ -1710,9 +1781,10 @@ img, video, canvas {
     font-size: 12.5px;
   }
 
-  /* Matrix category buttons */
+  /* Summary Matrix Cards: 2-column grid */
   .matrix-grid, .summary-cards {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
   }
   .matrix-item {
     min-height: 58px;
@@ -1725,10 +1797,10 @@ img, video, canvas {
     font-size: 20px;
   }
 
-  /* Action buttons */
+  /* Action Buttons */
   .ledger-actions {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
     width: 100%;
   }
@@ -1739,7 +1811,7 @@ img, video, canvas {
     letter-spacing: 0.02em;
   }
 
-  /* Session banner */
+  /* Session Restore Banner */
   .session-restore-banner {
     flex-direction: column;
     align-items: flex-start;
@@ -1757,7 +1829,7 @@ img, video, canvas {
     min-height: 38px;
   }
 
-  /* Info strip */
+  /* Info Strip */
   .info-strip {
     flex-direction: column;
     align-items: stretch;
@@ -1775,11 +1847,11 @@ img, video, canvas {
 
   /* Overlay */
   .drag-overlay-box {
-    padding: 28px 16px;
+    padding: 24px 14px;
     margin: 0 12px;
   }
   .drag-overlay-box h2 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
   /* Footer */
@@ -1792,10 +1864,19 @@ img, video, canvas {
   }
 }
 
-/* Ultra-compact phones (320px-340px) */
-@media (max-width: 340px) {
+/* ── 5. Ultra-Compact Phones (320px–360px) ───────────────────────────────── */
+@media (max-width: 360px) {
+  .wrapper {
+    padding: 14px 10px 28px;
+  }
+  .proto-bar {
+    padding: 8px 10px;
+  }
+  .title-block h1 {
+    font-size: 26px;
+  }
   .rate-selector {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .rate-btn {
     border-bottom: 1px solid var(--rule);
@@ -1807,8 +1888,13 @@ img, video, canvas {
   .rate-btn:nth-child(4) {
     border-bottom: none;
   }
+  .tele-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
   .ledger-actions {
     grid-template-columns: 1fr;
+    gap: 6px;
   }
   .ledger-actions .btn-action-outline {
     grid-column: span 1;
