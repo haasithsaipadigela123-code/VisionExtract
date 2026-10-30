@@ -16,7 +16,13 @@
   <!-- ── Fullscreen Drag Overlay ────────────────────────── -->
   <div id="dragOverlay" class="drag-overlay" hidden>
     <div class="drag-overlay-box">
-      <div class="drag-overlay-icon" aria-hidden="true">↓</div>
+      <div class="drag-overlay-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
       <h2>DROP TARGET MEDIA</h2>
       <p>Extract data from your video or image directly in your browser</p>
     </div>
@@ -89,7 +95,13 @@
 
         <!-- Upload drop box -->
         <div class="drop-box" id="dropzone" tabindex="0" role="button" aria-label="Mount Target Media">
-          <div class="drop-icon-symbol">↓</div>
+          <div class="drop-icon-symbol" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
           <h3 class="drop-heading" id="dzTitle">Mount Target Media</h3>
           <p class="drop-sub" id="dzSub">Drop MP4, WebM, MOV or Image here<br/>Max payload limit: 500 MB</p>
 
@@ -256,7 +268,7 @@
               <tbody id="tableBody">
                 <tr id="emptyRow">
                   <td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--ink-muted); font-family: var(--font-mono); font-size: 12px;">
-                    No media analyzed yet. Drop a video or image on the left and click Execute Extraction.
+                    No media analyzed yet. Select or drop a video or image above and click Execute Extraction.
                   </td>
                 </tr>
               </tbody>

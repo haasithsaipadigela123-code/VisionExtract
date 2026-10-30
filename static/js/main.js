@@ -735,7 +735,7 @@
     tableBody.innerHTML =
       '<tr id="emptyRow">' +
         '<td colspan="6" style="text-align: center; padding: 48px 16px; color: var(--ink-muted); font-family: var(--font-mono); font-size: 12px;">' +
-          'No media analyzed yet. Drop a video or image on the left and click Execute Extraction.' +
+          'No media analyzed yet. Select or drop a video or image and click Execute Extraction.' +
         '</td>' +
       '</tr>';
     emptyLine.hidden = true;
