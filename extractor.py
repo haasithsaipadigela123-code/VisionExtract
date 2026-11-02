@@ -37,9 +37,16 @@ MONTHS_RE = (
 
 PATTERNS = {
     "phone": [
-        re.compile(r"(?:\+91|91)[\s\-]?[6-9]\d{9}"),
-        re.compile(r"\b[6-9]\d{9}\b"),
-        re.compile(r"\+(?!91)\d{1,3}[\s\-]?\(?\d{2,4}\)?[\s\-]?\d{3,5}[\s\-]?\d{3,5}"),
+        # 1. Indian Mobile numbers (with optional +91, 91, or 0; starting with 6, 7, 8, or 9; flexible spaces, hyphens, dots)
+        # Handles: 98765 43210, +91 98765 43210, +91-98765-43210, 98765-43210, 09876543210, 9876543210, 987 654 3210, etc.
+        re.compile(r"(?<![\w+])(?<!\+\d\s)(?<!\+\d{2}\s)(?<!\+\d{3}\s)(?<!\+\d\b)(?<!\+\d{2}\b)(?<!\+\d{3}\b)(?:(?:\+|00)?91[\s\-]?)?(?:0[\s\-]?)?[6-9](?:[\s\-.]?\d){9}(?![\s\-.]?\d)"),
+        # 2. Numbers preceded by telephone/mobile keywords (Phone, Ph, Mobile, Mob, Tel, Call, Contact, WhatsApp, etc.)
+        re.compile(r"(?i)\b(?:phone|ph\.?|mobile|mob\.?|tel\.?|telephone|call|contact|whatsapp|wa|cell|m|t)[\s.:#-]+(?:\+?\d{1,4}[\s\-]?)?(?:\(?\d{2,5}\)?[\s\-.]?)?\d{3,5}[\s\-.]?\d{3,5}(?![\s\-.]?\d)"),
+        # 3. Indian Landline / STD numbers (with 2 to 4 digit area code starting with 0, or with +91)
+        # Handles: 040-23456789, 040 23456789, (040) 23456789, 022 23456789, 080-12345678, +91 40 23456789, etc.
+        re.compile(r"(?<![\w+])(?:(?:\+|00)?91[\s\-]?)?(?:\(0?\d{2,4}\)|0\d{2,4}|(?<=\+91\s)\d{2,4}|(?<=\+91\-)\d{2,4})[\s\-]?[\d\s\-]{6,10}(?![\s\-.]?\d)"),
+        # 4. International Phone numbers with country code (+1, +44, +971, +65, etc.)
+        re.compile(r"\+(?!91[\s\-\d])\d{1,4}[\s\-.]?(?:\(\d{1,4}\)[\s\-.]?|\d{1,4}[\s\-.]?)\d{3,4}[\s\-.]?\d{3,5}(?![\s\-.]?\d)"),
     ],
     "email": [
         re.compile(r"[a-zA-Z0-9._%+\-]{2,}@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"),
@@ -96,9 +103,35 @@ def _clean_ocr(text: str) -> str:
         return "1" if (prev.isdigit() or nxt.isdigit()) else "|"
 
     t = re.sub(r"\|", pipe_to_one, t)
+
+    # Country code OCR misreads: +9l or +9I -> +91
+    t = re.sub(r"\+9[lI|](?=[\s\d\-])", "+91", t)
+
+    # Digit / letter confusions only in numeric context
     t = re.sub(r"\bI(?=\d)", "1", t)
+    t = re.sub(r"(?<=\d)I\b", "1", t)
     t = re.sub(r"\bO(?=\d)", "0", t)
+    t = re.sub(r"(?<=\d)O\b", "0", t)
     t = re.sub(r"\bl(?=\d)", "1", t)
+    t = re.sub(r"(?<=\d)l\b", "1", t)
+
+    # Inside digit runs: O -> 0, l/I -> 1
+    t = re.sub(r"(\d)[oO](\d)", r"\g<1>0\g<2>", t)
+    t = re.sub(r"(\d)[lI|](\d)", r"\g<1>1\g<2>", t)
+    t = re.sub(r"(\d\s)[oO](\d)", r"\g<1>0\g<2>", t)
+    t = re.sub(r"(\d)[oO](\s\d)", r"\g<1>0\g<2>", t)
+    t = re.sub(r"(\d\s)[lI|](\d)", r"\g<1>1\g<2>", t)
+    t = re.sub(r"(\d)[lI|](\s\d)", r"\g<1>1\g<2>", t)
+
+    # Trailing misreads at end of 10-digit mobile groups (e.g. 98765 4321O -> 98765 43210)
+    t = re.sub(r"(\b[6-9]\d{4}\s\d{4})[oO]\b", r"\g<1>0", t)
+    t = re.sub(r"(\b[6-9]\d{4}\s\d{4})[lI|]\b", r"\g<1>1", t)
+    t = re.sub(r"(\b[6-9]\d{8})[oO]\b", r"\g<1>0", t)
+    t = re.sub(r"(\b[6-9]\d{8})[lI|]\b", r"\g<1>1", t)
+
+    # S/s -> 5, B -> 8 only between digits
+    t = re.sub(r"(?<=\d)[Ss](?=\d)", "5", t)
+    t = re.sub(r"(?<=\d)B(?=\d)", "8", t)
 
     # Fix spaces around @ and . in OCR-extracted emails (e.g., "user @ domain . com" -> "user@domain.com")
     t = re.sub(r"([a-zA-Z0-9._%+\-]+)\s*@\s*([a-zA-Z0-9.\-]+)", r"\1@\2", t)
@@ -150,14 +183,39 @@ def _norm_email(raw: str) -> str:
 
 
 def _norm_phone(raw: str) -> str:
-    d = re.sub(r"\D", "", raw)
+    # Strip any keyword prefix (Phone:, Mob:, Tel:, Call:, etc.)
+    clean = re.sub(
+        r"^(?:phone|ph\.?|mobile|mob\.?|tel\.?|telephone|call|contact|whatsapp|wa|cell|m|t)[\s.:#-]*",
+        "",
+        raw.strip(),
+        flags=re.I,
+    ).strip()
+    d = re.sub(r"\D", "", clean)
+    # International phone with +
+    if clean.startswith("+"):
+        if d.startswith("91") and len(d) in (11, 12) and d[2] in "6789":
+            return "+91" + d[2:]
+        return "+" + d
+    # 12-digit Indian mobile with 91: e.g. 919876543210 -> +919876543210
     if len(d) == 12 and d.startswith("91") and d[2] in "6789":
         return "+91" + d[2:]
-    if len(d) == 11 and d.startswith("0"):
+    # 11-digit Indian mobile with leading 0: e.g. 09876543210 -> +919876543210
+    if len(d) == 11 and d.startswith("0") and d[1] in "6789":
         return "+91" + d[1:]
+    # 10-digit Indian mobile: e.g. 9876543210 -> +919876543210
     if len(d) == 10 and d[0] in "6789":
         return "+91" + d
-    return re.sub(r"\s", "", raw).strip()
+    # Indian landline with 0: e.g. 040-23456789 -> 040-23456789
+    if len(d) in (10, 11) and d.startswith("0"):
+        if len(d) == 11 and d[:3] in ("011", "022", "033", "044", "040", "080"):
+            return f"{d[:3]}-{d[3:]}"
+        std_len = 3 if len(d) == 10 else 4
+        return f"{d[:std_len]}-{d[std_len:]}"
+    # Indian landline with 91: e.g. 914023456789
+    if len(d) in (10, 11, 12) and d.startswith("91"):
+        rest = d[2:]
+        return f"+91-{rest[:2]}-{rest[2:]}"
+    return re.sub(r"\s+", "", clean).strip()
 
 
 def _norm_lower(raw: str) -> str:
@@ -227,13 +285,36 @@ def _norm_amount(raw: str) -> str:
 # Validators (return True to keep a match)
 # --------------------------------------------------------------------------- #
 def _valid_phone(v: str) -> bool:
-    t = v.strip()
-    d = re.sub(r"\D", "", t)
+    clean = re.sub(
+        r"^(?:phone|ph\.?|mobile|mob\.?|tel\.?|telephone|call|contact|whatsapp|wa|cell|m|t)[\s.:#-]*",
+        "",
+        v.strip(),
+        flags=re.I,
+    ).strip()
+    d = re.sub(r"\D", "", clean)
+    # Reject pure repeated digits (e.g. 0000000000 or 1111111111)
+    if len(set(d)) <= 1:
+        return False
+    # International phone with + (8 to 15 digits)
+    if (v.strip().startswith("+") or clean.startswith("+")) and 8 <= len(d) <= 15:
+        return True
+    # Reject 12-digit Aadhaar pattern (starts with non-91, or 4-4-4 grouping)
+    if len(d) == 12 and not d.startswith("91"):
+        return False
+    # 10-digit Indian mobile
     if len(d) == 10 and d[0] in "6789":
         return True
+    # 11-digit Indian mobile starting with 0
+    if len(d) == 11 and d.startswith("0") and d[1] in "6789":
+        return True
+    # 12-digit Indian mobile starting with 91
     if len(d) == 12 and d.startswith("91") and d[2] in "6789":
         return True
-    if t.startswith("+") and 10 <= len(d) <= 15:
+    # Indian landline with 0 (10 or 11 digits)
+    if len(d) in (10, 11) and d.startswith("0"):
+        return True
+    # Indian landline with 91 (10, 11, or 12 digits)
+    if len(d) in (10, 11, 12) and d.startswith("91"):
         return True
     return False
 
