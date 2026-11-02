@@ -26,13 +26,27 @@
 
 ## 🚀 Quick Start
 
-To run the project locally on your machine, follow the instructions in [**`run.md`**](run.md):
+To run the project on any machine:
 
-```cmd
-cd "C:\Users\haasi\OneDrive\Documents\Mini Project"
-.venv\Scripts\activate
-pip install -r requirements.txt
-python app.py
-```
+1. Open a terminal / command prompt inside the unzipped project folder.
+2. (Recommended) Create and activate a Python virtual environment:
+   ```bash
+   python -m venv .venv
+   
+   # Windows:
+   .venv\Scripts\activate
+   
+   # macOS / Linux:
+   source .venv/bin/activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Start the application:
+   ```bash
+   python app.py
+   ```
+5. Open your browser and navigate to **`http://127.0.0.1:5000`**.
 
-Then visit **`http://127.0.0.1:5000`** in your browser.
+*(Note: For the original author environment, see [`run.md`](run.md))*
