@@ -1,4 +1,4 @@
-# Python virtual environment
+# Python virtual environments
 .venv/
 venv/
 env/
@@ -11,8 +11,26 @@ __pycache__/
 *.so
 .pytest_cache/
 
-# OS and Editor files
+# Archives & Temporary files
+*.zip
+*.tar.gz
+*.rar
+*.log
+
+# Root-level loose diagram images (official assets belong in static/img/)
+/*.jpg
+/*.jpeg
+/*.png
+
+# OS and Editor metadata
 .DS_Store
 Thumbs.db
+desktop.ini
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local

@@ -13,12 +13,23 @@ Routes:
 """
 
 import os
+import sys
 
 from flask import Flask, request, jsonify, render_template
 
 import extractor
 
-app = Flask(__name__)
+# Anchor root path explicitly to the directory containing this script.
+# This ensures template_folder and static_folder resolve correctly regardless of
+# the current working directory from which python is invoked.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static"),
+)
+
 # The request body is just text now, so a small cap is plenty.
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 
@@ -70,9 +81,21 @@ def too_large(_e):
     return jsonify({"error": "Too much text to process at once."}), 413
 
 
+@app.errorhandler(500)
+def server_error(e):
+    import traceback
+    traceback.print_exc()
+    return (
+        f"<h3>500 Internal Server Error</h3>"
+        f"<p>An unexpected error occurred while processing the request.</p>"
+        f"<pre>{str(e)}</pre>",
+        500,
+    )
+
+
 if __name__ == "__main__":
-    # Debug mode (friendly error pages) is opt-in via an env var so a demo/
-    # presentation never runs with a debug traceback on screen by accident.
-    # The auto-reloader stays OFF either way (the .venv lives in this synced folder).
-    debug = os.environ.get("FLASK_DEBUG") == "1"
-    app.run(host="127.0.0.1", port=5000, debug=debug, use_reloader=False)
+    # Debug mode is enabled by default for local development so tracebacks are clear.
+    # Set FLASK_DEBUG=0 to disable.
+    debug = os.environ.get("FLASK_DEBUG", "1") == "1"
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="127.0.0.1", port=port, debug=debug, use_reloader=False)
